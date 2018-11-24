@@ -23,9 +23,6 @@
 #define CMD_PROM_C5 0xAA
 #define CMD_PROM_C6 0xAC
 
-
-SPI_TypeDef* SPI_MS5611 =  SPI2;
-
 static uint16_t prom[6];
 extern SPI_HandleTypeDef hspi2;
 
