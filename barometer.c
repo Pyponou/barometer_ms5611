@@ -23,8 +23,31 @@
 #define CMD_PROM_C5 0xAA
 #define CMD_PROM_C6 0xAC
 
+#define PRESSURE_OSR_256  0x40
+#define PRESSURE_OSR_512  0x42
+#define PRESSURE_OSR_1024 0x44
+#define PRESSURE_OSR_2048 0x46
+#define PRESSURE_OSR_4096 0x48
+
+#define TEMP_OSR_256      0x50
+#define TEMP_OSR_512  	  0x52
+#define TEMP_OSR_1024 	  0x54
+#define TEMP_OSR_2048     0x56
+#define TEMP_OSR_4096     0x58
+
+#define CONVERSION_OSR_256  1
+#define CONVERSION_OSR_512  2
+#define CONVERSION_OSR_1024 3
+#define CONVERSION_OSR_2048 5
+#define CONVERSION_OSR_4096 10
+
 static uint16_t prom[6];
 extern SPI_HandleTypeDef hspi2;
+
+//min OSR by default
+static uint8_t pressAddr = PRESSURE_OSR_256;
+static uint8_t tempAddr = TEMP_OSR_256;
+static uint32_t convDelay = CONVERSION_OSR_256;
 
 static int32_t temperature;
 static int32_t pressure;
@@ -113,10 +136,10 @@ static uint32_t ms5611_read24bits(uint8_t reg)
 static uint32_t ms5611_readRawTemp()
 {
 	uint32_t D2;
-	//Convert temp max OSR
-	ms5611_write(0x58);
+	//Convert temp
+	ms5611_write(tempAddr);
 	//Conversion Time
-	HAL_Delay(10);
+	HAL_Delay(convDelay);
 	//Read ADC
 	D2 = ms5611_read24bits(0x00);
 
@@ -126,10 +149,10 @@ static uint32_t ms5611_readRawTemp()
 static uint32_t ms5611_readRawPressure()
 {
 	uint32_t D1;
-	//Convert pressure max OSR
-	ms5611_write(0x48);
+	//Convert pressure
+	ms5611_write(pressAddr);
 	//Conversion time
-	HAL_Delay(10);
+	HAL_Delay(convDelay);
 	//Read ADC
 	D1 = ms5611_read24bits(0x00);
 
@@ -139,6 +162,39 @@ static uint32_t ms5611_readRawPressure()
 void Barometer_init()
 {
 	ms5611_init();
+}
+
+void Barometer_setOSR(OSR osr)
+{
+	switch(osr)
+	{
+		default:
+		case OSR_256:
+			pressAddr = PRESSURE_OSR_256;
+			tempAddr = TEMP_OSR_256;
+			convDelay = CONVERSION_OSR_256;
+			break;
+		case OSR_512:
+			pressAddr = PRESSURE_OSR_512;
+			tempAddr = TEMP_OSR_512;
+			convDelay = CONVERSION_OSR_512;
+			break;
+		case OSR_1024:
+			pressAddr = PRESSURE_OSR_1024;
+			tempAddr = TEMP_OSR_1024;
+			convDelay = CONVERSION_OSR_1024;
+			break;
+		case OSR_2048:
+			pressAddr = PRESSURE_OSR_2048;
+			tempAddr = TEMP_OSR_2048;
+			convDelay = CONVERSION_OSR_2048;
+			break;
+		case OSR_4096:
+			pressAddr = PRESSURE_OSR_4096;
+			tempAddr = TEMP_OSR_4096;
+			convDelay = CONVERSION_OSR_4096;
+			break;
+	}
 }
 
 int32_t Barometer_getTemp(bool calculate)
